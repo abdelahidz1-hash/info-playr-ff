@@ -1,8 +1,8 @@
+from flask import Flask
 import os
-import threading
 import requests
 import telebot
-from flask import Flask
+import threading
 
 # توكن البوت الخاص بك
 TOKEN = "7989116766:AAHuvR5MYs8geGczCWCpAm22Vq8fLa4pnoc"
@@ -38,7 +38,7 @@ def escape_md(val):
   )
 
 
-# أمر البداية /start
+# أمر البداية /start (لا يتم حذفه كما طلبت)
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
   bot.reply_to(
@@ -49,9 +49,14 @@ def send_welcome(message):
   )
 
 
-# أمر المساعدة /help
+# أمر المساعدة /help (يتم حذف رسالة المستخدم الأصلية)
 @bot.message_handler(commands=["help"])
 def send_help(message):
+  try:
+    bot.delete_message(message.chat.id, message.message_id)
+  except Exception:
+    pass
+
   bot.reply_to(
       message,
       "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴْدs:**\n"
@@ -74,6 +79,11 @@ def send_help(message):
 # أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب
 @bot.message_handler(commands=["info"])
 def fetch_info(message):
+  try:
+    bot.delete_message(message.chat.id, message.message_id)
+  except Exception:
+    pass
+
   args = message.text.split()
   if len(args) > 1:
     uid = args[1]
@@ -122,7 +132,6 @@ def fetch_info(message):
       )
       region = get_val("region", "AccountRegion", "server", "accountRegion")
 
-      # استخدام رابط الصورة الثابت الذي طلبته فوق معلومات اللاعب
       banner_url = "https://i.ibb.co/MyNThqFz/1793135688578.jpg"
 
       text = (
@@ -138,30 +147,29 @@ def fetch_info(message):
       )
 
       try:
-        bot.send_photo(
-            message.chat.id,
-            banner_url,
-            caption=text,
-            parse_mode="Markdown",
-            reply_to_message_id=message.message_id,
-        )
+        bot.send_photo(message.chat.id, banner_url, caption=text, parse_mode="Markdown")
       except Exception:
-        bot.reply_to(message, text, parse_mode="Markdown")
+        bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
     else:
-      bot.reply_to(
-          message, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
+      bot.send_message(
+          message.chat.id, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
       )
 
   except requests.exceptions.RequestException as e:
-    bot.reply_to(
-        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
+    bot.send_message(
+        message.chat.id, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
     )
 
 
 # أمر للبحث عن اللاعبين باستخدام اسم اللاعب (/search أو /ser)
 @bot.message_handler(commands=["search", "ser"])
 def search_player(message):
+  try:
+    bot.delete_message(message.chat.id, message.message_id)
+  except Exception:
+    pass
+
   args = message.text.split(maxsplit=1)
   if len(args) > 1:
     player_name = args[1]
@@ -196,7 +204,7 @@ def search_player(message):
           results = [data]
 
       if not results:
-        bot.reply_to(message, "❌ ɴᴏ ᴘʟᴀʏᴇʀs ғᴏᴜɴᴅ wɪᴛʜ ᴛʜɪs ɴᴀᴍᴇ.")
+        bot.send_message(message.chat.id, "❌ ɴᴏ ᴘʟᴀʏᴇʀs ғᴏᴜɴᴅ wɪᴛʜ ᴛʜɪs ɴᴀᴍᴇ.")
         return
 
       text = (
@@ -219,27 +227,31 @@ def search_player(message):
           text += f"• **{i}.** {player}\n"
 
       text += "━━━━━━━━━━━━━━━━"
-      bot.reply_to(
-          message,
+      bot.send_message(
+          message.chat.id,
           text,
           parse_mode="Markdown",
-          reply_to_message_id=message.message_id,
       )
 
     else:
-      bot.reply_to(
-          message, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
+      bot.send_message(
+          message.chat.id, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
       )
 
   except requests.exceptions.RequestException as e:
-    bot.reply_to(
-        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
+    bot.send_message(
+        message.chat.id, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
     )
 
 
 # أمر لجلب بيانات المستوى (Level) عبر إدخال الآي دي الخاص باللاعب
 @bot.message_handler(commands=["level"])
 def fetch_level(message):
+  try:
+    bot.delete_message(message.chat.id, message.message_id)
+  except Exception:
+    pass
+
   args = message.text.split()
   if len(args) > 1:
     uid = args[1]
@@ -292,27 +304,31 @@ def fetch_level(message):
           f"━━━━━━━━━━━━━━━━"
       )
 
-      bot.reply_to(
-          message,
+      bot.send_message(
+          message.chat.id,
           text,
           parse_mode="Markdown",
-          reply_to_message_id=message.message_id,
       )
 
     else:
-      bot.reply_to(
-          message, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
+      bot.send_message(
+          message.chat.id, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
       )
 
   except requests.exceptions.RequestException as e:
-    bot.reply_to(
-        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
+    bot.send_message(
+        message.chat.id, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
     )
 
 
 # أمر لجلب بيانات الكلأن (Guild/Clan) عبر إدخال معرف الكلأن
 @bot.message_handler(commands=["clan"])
 def fetch_clan(message):
+  try:
+    bot.delete_message(message.chat.id, message.message_id)
+  except Exception:
+    pass
+
   args = message.text.split()
   if len(args) > 1:
     clan_id = args[1]
@@ -380,27 +396,31 @@ def fetch_clan(message):
           f"━━━━━━━━━━━━━━━━"
       )
 
-      bot.reply_to(
-          message,
+      bot.send_message(
+          message.chat.id,
           text,
           parse_mode="Markdown",
-          reply_to_message_id=message.message_id,
       )
 
     else:
-      bot.reply_to(
-          message, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
+      bot.send_message(
+          message.chat.id, f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}"
       )
 
   except requests.exceptions.RequestException as e:
-    bot.reply_to(
-        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
+    bot.send_message(
+        message.chat.id, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
     )
 
 
 # أمر لجلب مظهر / ملابس اللاعب (Outfit)
 @bot.message_handler(commands=["outfit"])
 def fetch_outfit(message):
+  try:
+    bot.delete_message(message.chat.id, message.message_id)
+  except Exception:
+    pass
+
   args = message.text.split()
   if len(args) > 1:
     uid = args[1]
@@ -412,8 +432,8 @@ def fetch_outfit(message):
     )
     return
 
-  wait_msg = bot.reply_to(
-      message, "⏳ جاري جلب صورة المظهر، يرجى الانتظار...", parse_mode="Markdown"
+  wait_msg = bot.send_message(
+      message.chat.id, "⏳ جاري جلب صورة المظهر، يرجى الانتظار...", parse_mode="Markdown"
   )
 
   try:
@@ -432,7 +452,6 @@ def fetch_outfit(message):
                 f" `{uid}`\n━━━━━━━━━━━━━━━━"
             ),
             parse_mode="Markdown",
-            reply_to_message_id=message.message_id,
         )
         bot.delete_message(message.chat.id, wait_msg.message_id)
       except Exception:
@@ -466,14 +485,12 @@ def fetch_outfit(message):
 if __name__ == "__main__":
   print("جاري تشغيل خادم الويب وبوت التليجرام...")
 
-  # تشغيل خادم Flask في مسار خلفي (Thread) ليفتح البورت الذي تحتاجه منصة Render
   t = threading.Thread(target=run_web)
   t.daemon = True
   t.start()
 
   bot.remove_webhook()
 
-  # فحص الـ Check الذي طلبته سابقاً
   try:
     uid = 4485827054
     check_r = requests.get(
@@ -485,4 +502,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-    
+  
