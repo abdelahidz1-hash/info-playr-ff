@@ -11,6 +11,16 @@ bot = telebot.TeleBot(TOKEN)
 # إعداد خادم Flask وهمي لإرضاء Render Web Service المجاني وتجنب مهلة البورتات
 app = Flask(__name__)
 
+# إعدادات Supabase
+SUPABASE_URL = "https://jtiuytnovkkvebmlcdme.supabase.co"
+# ملاحظة: يفضل وضع مفتاح الـ Anon Key أو Service Role الخاص بك هنا للتعامل مع جدول المستخدمين
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "YOUR_SUPABASE_KEY_HERE")
+SUPABASE_HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+    "Prefer": "return=representation"
+}
 
 @app.route("/")
 def home():
@@ -26,6 +36,54 @@ def run_web():
 VALID_BANNERS = set()
 
 
+# دوال مساعدة للتعامل مع قاعدة بيانات Supabase (النقاط والأوامر المجانية)
+def get_user_data(user_id):
+  try:
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/users?user_id=eq.{user_id}", headers=SUPABASE_HEADERS, timeout=10)
+    if r.status_code == 200 and r.json():
+      return r.json()[0]
+  except Exception as e:
+    print("Error fetching user:", e)
+  return None
+
+def create_or_update_user(user_id, data):
+  try:
+    existing = get_user_data(user_id)
+    if existing:
+      requests.patch(f"{SUPABASE_URL}/rest/v1/users?user_id=eq.{user_id}", json=data, headers=SUPABASE_HEADERS, timeout=10)
+    else:
+      data["user_id"] = user_id
+      requests.post(f"{SUPABASE_URL}/rest/v1/users", json=data, headers=SUPabase_HEADERS, timeout=10)
+  except Exception as e:
+    print("Error updating user:", e)
+
+def check_and_deduct(message, cost=2, is_info=False):
+  user_id = message.from_user.id
+  user = get_user_data(user_id)
+  
+  if not user:
+    # إنشاء مستخدم جديد برصيد 0 و 3 محاولات مجانية لـ info
+    user = {"user_id": user_id, "points": 0, "info_free_count": 0}
+    create_or_update_user(user_id, user)
+  
+  info_free_count = user.get("info_free_count", 0)
+  points = user.get("points", 0)
+  
+  if is_info and info_free_count < 3:
+    # استخدام مجاني ضمن الثلاث مرات الأولى
+    new_free_count = info_free_count + 1
+    create_or_update_user(user_id, {"info_free_count": new_free_count})
+    return True, f"🎁 تم استهلاك المحاولة المجانية ({new_free_count}/3) لأمر /info."
+  
+  # إذا انتهت المحاولات المجانية لـ info أو لأي أمر آخر، يتم خصم نقاط
+  if points >= cost:
+    new_points = points - cost
+    create_or_update_user(user_id, {"points": new_points})
+    return True, f"💳 تم خصم {cost} نقاط. رصيدك الحالي: {new_points} نقطة."
+  else:
+    return False, f"❌ رصيدك غير كافٍ! تحتاج إلى {cost} نقاط لاستخدام هذا الأمر.\n💡 للحصول على النقاط:\n1️⃣ اضغط على إعلان البانر وحل المهمة للحصول على 10 نقاط.\n2️⃣ شارك رابط الدعوة الخاص بك للحصول على 10 نقاط عند انضمام صديق."
+
+
 # دالة لتأمين رموز الماركدون لمنع أخطاء التليجرام
 def escape_md(val):
   if val is None or val == "ɴ/ᴀ":
@@ -38,15 +96,66 @@ def escape_md(val):
   )
 
 
-# أمر البداية /start
+# أمر البداية /start مع دعم نظام الدعوات (Referral)
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
-  bot.reply_to(
-      message,
+  user_id = message.from_user.id
+  args = message.text.split()
+  
+  # التحقق من وجود مستخدم دعي عبر رابط (Referral)
+  if len(args) > 1:
+    referrer_id = args[1]
+    if referrer_id.isdigit() and int(referrer_id) != user_id:
+      # التحقق إن كان المستخدم الجديد مسجلاً من قبل أم لا
+      existing_user = get_user_data(user_id)
+      if not existing_user:
+        # تسجيل المستخدم الجديد وإعطاء نقاط لصاحب الدعوة
+        create_or_update_user(user_id, {"points": 0, "info_free_count": 0, "invited_by": int(referrer_id)})
+        
+        # إضافة 10 نقاط لصاحب الرابط (المُحيل)
+        ref_user = get_user_data(int(referrer_id))
+        if ref_user:
+          ref_points = ref_user.get("points", 0) + 10
+          create_or_update_user(int(referrer_id), {"points": ref_points})
+          try:
+            bot.send_message(int(referrer_id), f"🎉 مبروك! دخل شخص جديد عبر رابط الدعوة الخاص بك وتم التحقق منه، وحصلت على **10 نقاط**! رصيدك الحالي: {ref_points}", parse_mode="Markdown")
+          except:
+            pass
+
+  # التأكد من تسجيل المستخدم الأساسي إذا لم يكن موجوداً
+  if not get_user_data(user_id):
+    create_or_update_user(user_id, {"points": 0, "info_free_count": 0})
+
+  bot_username = bot.get_me().username
+  ref_link = f"https://t.me/{bot_username}?start={user_id}"
+
+  welcome_text = (
       "ᴡᴇʟᴄᴏᴍᴇ! ʏᴏᴜʀ ʙᴏᴛ ɪs wᴏʀᴋɪɴɢ sᴜᴄᴄᴇssꜰᴜʟʟʏ.\n\n"
-      "ᴛʏᴘᴇ /help ᴛᴏ sᴇᴇ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀɴᴅ ʜᴏw ᴛᴏ ᴜsᴇ ᴛʜᴇᴍ.",
-      parse_mode="Markdown",
+      f"🔗 **رابط الدعوة الخاص بك:**\n`{ref_link}`\n"
+      "شارك الرابط مع أصدقائك، واكسب **10 نقاط** عن كل شخص يدخل من خلاله!\n\n"
+      "🎯 **كيف تحصل على النقاط؟**\n"
+      "1️⃣ اضغط على زر (إعلان البانر) أدناه واضغط عليه مرة واحدة لحصد **10 نقاط**.\n"
+      "2️⃣ شارك رابط البوت مع أصدقائك.\n\n"
+      "ᴛʏᴘᴇ /help ᴛᴏ sᴇᴇ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs."
   )
+
+  # إنشاء أزرار تفاعلية (بانر إعلاني + زر النقاط)
+  markup = telebot.types.InlineKeyboardMarkup()
+  markup.add(telebot.types.InlineKeyboardButton("📢 اضغط هنا للإعلان والحصول على 10 نقاط", url="https://jtiuytnovkkvebmlcdme.supabase.co"))
+  markup.add(telebot.types.InlineKeyboardButton("💰 رصيدي ونقاطي", callback_data="my_points"))
+
+  bot.reply_to(message, welcome_text, parse_mode="Markdown", reply_main_markup=None, reply_markup=markup)
+
+
+# زر استعلام النقاط عبر الـ Callback
+@bot.callback_query_handler(func=lambda call: call.data == "my_points")
+def callback_points(call):
+  user_id = call.from_user.id
+  user = get_user_data(user_id)
+  points = user.get("points", 0) if user else 0
+  info_free = user.get("info_free_count", 0) if user else 0
+  
+  bot.answer_callback_query(call.id, f"رصيدك الحالي: {points} نقطة\nمحاولات /info المجانية المستهلكة: {info_free}/3", show_alert=True)
 
 
 # أمر المساعدة /help
@@ -56,16 +165,11 @@ def send_help(message):
       message,
       "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴْدs:**\n"
       "━━━━━━━━━━━━━━━━\n"
-      "• **ᴘʟᴀʏᴇʀ ɪɴғᴏ:** `/info <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/info 7876206533`\n\n"
-      "• **sᴇᴀʀᴄʜ by ɴᴀᴍᴇ:** `/search <Name>` أو `/ser <Name>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/search xMaSrY`\n\n"
-      "• **ᴄʟᴀɴ ɪɴғᴏ:** `/clan <Clan ID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/clan 30512345`\n\n"
-      "• **ʟᴇᴠᴇʟ ɪɴғᴏ:** `/level <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/level 4485827054`\n\n"
-      "• **ᴏᴜᴛғɪᴛ ɪɴғᴏ:** `/outfit <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/outfit 4485827054`\n"
+      "• **ᴘʟᴀʏᴇʀ ɪɴғᴏ:** `/info <UID>` (أول 3 مرات مجاناً ثم خصم نقطتين)\n"
+      "• **sᴇᴀʀᴄʜ by ɴᴀᴍᴇ:** `/search <Name>` أو `/ser <Name>` (خصم نقطتين)\n"
+      "• **ᴄʟᴀɴ ɪɴғᴏ:** `/clan <Clan ID>` (خصم نقطتين)\n"
+      "• **ʟᴇᴠᴇʟ ɪɴғᴏ:** `/level <UID>` (خصم نقطتين)\n"
+      "• **ᴏᴜᴛғɪᴛ ɪɴғᴏ:** `/outfit <UID>` (خصم نقطتين)\n"
       "━━━━━━━━━━━━━━━━",
       parse_mode="Markdown",
   )
@@ -74,6 +178,11 @@ def send_help(message):
 # أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب
 @bot.message_handler(commands=["info"])
 def fetch_info(message):
+  allowed, msg = check_and_deduct(message, cost=2, is_info=True)
+  if not allowed:
+    bot.reply_to(message, msg, parse_mode="Markdown")
+    return
+
   args = message.text.split()
   if len(args) > 1:
     uid = args[1]
@@ -122,7 +231,6 @@ def fetch_info(message):
       )
       region = get_val("region", "AccountRegion", "server", "accountRegion")
 
-      # استخدام رابط الصورة الثابت الذي طلبته فوق معلومات اللاعب
       banner_url = "https://i.ibb.co/MyNThqFz/1793135688578.jpg"
 
       text = (
@@ -134,7 +242,8 @@ def fetch_info(message):
           f"• **ᴇxᴘ:** {exp}\n"
           f"• **ʟɪᴋᴇs:** {likes}\n"
           f"• **ʀᴇɢɪᴏɴ:** {region}\n"
-          f"━━━━━━━━━━━━━━━━"
+          f"━━━━━━━━━━━━━━━━\n\n"
+          f"ℹ️ _{msg}_"
       )
 
       try:
@@ -162,6 +271,11 @@ def fetch_info(message):
 # أمر للبحث عن اللاعبين باستخدام اسم اللاعب (/search أو /ser)
 @bot.message_handler(commands=["search", "ser"])
 def search_player(message):
+  allowed, msg = check_and_deduct(message, cost=2, is_info=False)
+  if not allowed:
+    bot.reply_to(message, msg, parse_mode="Markdown")
+    return
+
   args = message.text.split(maxsplit=1)
   if len(args) > 1:
     player_name = args[1]
@@ -218,7 +332,7 @@ def search_player(message):
         else:
           text += f"• **{i}.** {player}\n"
 
-      text += "━━━━━━━━━━━━━━━━"
+      text += f"━━━━━━━━━━━━━━━━\nℹ️ _{msg}_"
       bot.reply_to(
           message,
           text,
@@ -240,6 +354,11 @@ def search_player(message):
 # أمر لجلب بيانات المستوى (Level) عبر إدخال الآي دي الخاص باللاعب
 @bot.message_handler(commands=["level"])
 def fetch_level(message):
+  allowed, msg = check_and_deduct(message, cost=2, is_info=False)
+  if not allowed:
+    bot.reply_to(message, msg, parse_mode="Markdown")
+    return
+
   args = message.text.split()
   if len(args) > 1:
     uid = args[1]
@@ -289,7 +408,8 @@ def fetch_level(message):
           f"• **ɴᴀᴍᴇ:** {name}\n"
           f"• **ᴜɪᴅ:** `{uid_val}`\n"
           f"• **ʟᴇᴠᴇʟ:** {level_val}\n"
-          f"━━━━━━━━━━━━━━━━"
+          f"━━━━━━━━━━━━━━━━\n\n"
+          f"ℹ️ _{msg}_"
       )
 
       bot.reply_to(
@@ -313,6 +433,11 @@ def fetch_level(message):
 # أمر لجلب بيانات الكلأن (Guild/Clan) عبر إدخال معرف الكلأن
 @bot.message_handler(commands=["clan"])
 def fetch_clan(message):
+  allowed, msg = check_and_deduct(message, cost=2, is_info=False)
+  if not allowed:
+    bot.reply_to(message, msg, parse_mode="Markdown")
+    return
+
   args = message.text.split()
   if len(args) > 1:
     clan_id = args[1]
@@ -377,7 +502,8 @@ def fetch_clan(message):
           f"• **ʟᴇᴠᴇʟ:** {clan_level}\n"
           f"• **ᴍᴇᴍʙᴇʀs:** {member_count}/{max_members}\n"
           f"• **ʟᴇᴀᴅᴇʀ:** {leader_name}\n"
-          f"━━━━━━━━━━━━━━━━"
+          f"━━━━━━━━━━━━━━━━\n\n"
+          f"ℹ️ _{msg}_"
       )
 
       bot.reply_to(
@@ -401,6 +527,11 @@ def fetch_clan(message):
 # أمر لجلب مظهر / ملابس اللاعب (Outfit)
 @bot.message_handler(commands=["outfit"])
 def fetch_outfit(message):
+  allowed, msg = check_and_deduct(message, cost=2, is_info=False)
+  if not allowed:
+    bot.reply_to(message, msg, parse_mode="Markdown")
+    return
+
   args = message.text.split()
   if len(args) > 1:
     uid = args[1]
@@ -413,7 +544,7 @@ def fetch_outfit(message):
     return
 
   wait_msg = bot.reply_to(
-      message, "⏳ جاري جلب صورة المظهر، يرجى الانتظار...", parse_mode="Markdown"
+      message, f"⏳ جاري جلب صورة المظهر، يرجى الانتظار...\nℹ️ _{msg}_", parse_mode="Markdown"
   )
 
   try:
@@ -456,7 +587,7 @@ def fetch_outfit(message):
     )
   except requests.exceptions.RequestException as e:
     bot.edit_message_text(
-        f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}",
+        f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟེ་ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}",
         message.chat.id,
         wait_msg.message_id,
     )
@@ -485,3 +616,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
+      
