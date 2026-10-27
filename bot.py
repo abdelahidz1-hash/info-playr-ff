@@ -44,8 +44,7 @@ def send_welcome(message):
   bot.reply_to(
       message,
       "ᴡᴇʟᴄᴏᴍᴇ! ʏᴏᴜʀ ʙᴏᴛ ɪs wᴏʀᴋɪɴɢ sᴜᴄᴄᴇssꜰᴜʟʟʏ.\n\n"
-      "ᴛʏᴘᴇ /help ᴛᴏ sᴇᴇ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀɴᴅ ʜᴏw ᴛᴏ"
-      " ᴜsᴇ ᴛʜᴇᴍ.",
+      "ᴛʏᴘᴇ /help ᴛᴏ sᴇᴇ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀɴᴅ ʜᴏw ᴛᴏ ᴜsᴇ ᴛʜᴇᴍ.",
       parse_mode="Markdown",
   )
 
@@ -55,7 +54,7 @@ def send_welcome(message):
 def send_help(message):
   bot.reply_to(
       message,
-      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:**\n"
+      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴْدs:**\n"
       "━━━━━━━━━━━━━━━━\n"
       "• **ᴘʟᴀʏᴇʀ ɪɴғᴏ:** `/info <UID>`\n"
       "  *ᴇxᴀᴍᴘʟᴇ:* `/info 7876206533`\n\n"
@@ -81,8 +80,8 @@ def fetch_info(message):
   else:
     bot.reply_to(
         message,
-        "⚠️ ᴘʟᴇᴀsᴇ wʀɪᴛᴇ ᴛʜᴇ ᴜɪᴅ ᴄᴏʀʀᴇᴄᴛʟʏ ɴᴇxᴛ ᴛᴏ ᴛʜᴇ"
-        " ᴄᴏᴍᴍᴀɴᴅ.\nᴇxᴀᴍᴘʟᴇ:\n`/info 7876206533`",
+        "⚠️ ᴘʟᴇᴀsᴇ wʀɪᴛᴇ ᴛʜᴇ ᴜɪᴅ ᴄᴏʀʀᴇᴄᴛʟʏ ɴᴇxᴛ ᴛᴏ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅ.\nᴇxᴀᴍᴘʟᴇ:\n`/info"
+        " 7876206533`",
         parse_mode="Markdown",
     )
     return
@@ -123,38 +122,8 @@ def fetch_info(message):
       )
       region = get_val("region", "AccountRegion", "server", "accountRegion")
 
-      # جلب البانر والأفتار من الـ API الجديد الذي طلبته
-      banner_url = None
-      avatar_url = None
-      try:
-        momin_r = requests.get(
-            f"https://momin-bot-info.vercel.app/{uid}", timeout=10
-        )
-        if momin_r.status_code == 200:
-          momin_data = momin_r.json()
-          if isinstance(momin_data, dict):
-            banner_url = (
-                momin_data.get("banner")
-                or momin_data.get("banner_url")
-                or momin_data.get("bannerUrl")
-            )
-            avatar_url = (
-                momin_data.get("avatar")
-                or momin_data.get("avatar_url")
-                or momin_data.get("avatarUrl")
-            )
-      except Exception:
-        pass
-
-      # الاحتياط للطريقة القديمة في حال لم يتوفر البانر من الـ API الجديد
-      if not banner_url:
-        banner_id = get_val(
-            "bannerId", "banner_id", "banner", "cardId", "card_id", "badgeId"
-        )
-        if banner_id != "ɴ/ᴀ":
-          banner_url = f"https://freefiremobile-a.akamaihd.net/common/all-image/banner/{banner_id}.png"
-        else:
-          banner_url = "https://i.imgur.com/3Z6Y8uS.png"
+      # استخدام رابط الصورة الثابت الذي طلبته فوق معلومات اللاعب
+      banner_url = "https://i.ibb.co/MyNThqFz/1793135688578.jpg"
 
       text = (
           f"👤 **ᴘʟᴀʏᴇʀ ɪɴғᴏʀᴍᴀᴛɪᴏɴ:**\n"
@@ -168,20 +137,6 @@ def fetch_info(message):
           f"━━━━━━━━━━━━━━━━"
       )
 
-      # إرسال الفيديو المتحرك أولاً ليظهر فوق معلومات اللاعب تماماً مثل الصورة المطلوبة
-      video_url = (
-          "https://res.cloudinary.com/kp7vx8ex/video/upload/VID_20261027_125607_181.mp4"
-      )
-      try:
-        bot.send_video(
-            message.chat.id,
-            video_url,
-            reply_to_message_id=message.message_id,
-        )
-      except Exception:
-        pass
-
-      # إرسال صورة البانر ومعها نصوص المعلومات
       try:
         bot.send_photo(
             message.chat.id,
@@ -291,8 +246,8 @@ def fetch_level(message):
   else:
     bot.reply_to(
         message,
-        "⚠️ ᴘʟᴇᴀsᴇ wʀɪᴛᴇ ᴛʜᴇ ᴜɪᴅ ᴄᴏʀʀᴇᴄᴛʟʏ ɴᴇxᴛ ᴛᴏ ᴛʜᴇ"
-        " ᴄᴏᴍᴍᴀɴᴅ.\nᴇxᴀᴍᴘʟᴇ:\n`/level 4485827054`",
+        "⚠️ ᴘʟᴇᴀsᴇ wʀɪᴛᴇ ᴛʜᴇ ᴜɪᴅ ᴄᴏʀʀᴇᴄᴛʟʏ ɴᴇxᴛ ᴛᴏ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅ.\nᴇxᴀᴍᴘʟᴇ:\n`/level"
+        " 4485827054`",
         parse_mode="Markdown",
     )
     return
@@ -452,8 +407,7 @@ def fetch_outfit(message):
   else:
     bot.reply_to(
         message,
-        "⚠️ ᴘʟᴇᴀsᴇ wʀɪᴛᴇ ᴛʜᴇ ᴜɪᴅ ᴄᴏʀʀᴇᴄᴛʟʏ ɴᴇxᴛ ᴛᴏ ᴛʜᴇ"
-        " ᴄᴏᴍᴍᴀɴᴅ.\nᴇxᴀᴍᴘʟᴇ:\n`/outfit 4485827054`",
+        "⚠️ ᴘʟᴇᴀsᴇ wʀɪᴛᴇ ᴛʜᴇ ᴜɪᴅ ᴄᴏʀʀᴇᴄᴛʟʏ ɴᴇxᴛ ᴛᴏ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅ.\nᴇxᴀᴍᴘʟᴇ:\n`/outfit 4485827054`",
         parse_mode="Markdown",
     )
     return
@@ -489,15 +443,14 @@ def fetch_outfit(message):
         )
     else:
       bot.edit_message_text(
-          f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏْدე: {r.status_code}",
+          f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}",
           message.chat.id,
           wait_msg.message_id,
       )
 
   except requests.exceptions.Timeout:
     bot.edit_message_text(
-        "⏱️ انتهت مهلة الانتظار، الخادم المجاني بطيء جداً حالياً ولم يستجب في"
-        " الوقت المحدد. يرجى المحاولة لاحقاً.",
+        "⏱️ انتهت مهلة الانتظار، الخادم المجاني بطيء جداً حالياً ولم يستجب في الوقت المحدد. يرجى المحاولة لاحقاً.",
         message.chat.id,
         wait_msg.message_id,
     )
@@ -532,4 +485,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-            
+    
