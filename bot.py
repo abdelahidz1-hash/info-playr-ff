@@ -1,9 +1,26 @@
+import os
+import threading
 import requests
 import telebot
+from flask import Flask
 
 # توكن البوت الخاص بك
 TOKEN = "7989116766:AAHuvR5MYs8geGczCWCpAm22Vq8fLa4pnoc"
 bot = telebot.TeleBot(TOKEN)
+
+# إعداد خادم Flask وهمي لإرضاء Render Web Service المجاني وتجنب مهلة البورتات
+app = Flask(__name__)
+
+
+@app.route("/")
+def home():
+  return "Bot is running successfully!"
+
+
+def run_web():
+  port = int(os.environ.get("PORT", 10000))
+  app.run(host="0.0.0.0", port=port)
+
 
 # قائمة معرفات البانرات المعتمدة الفارغة
 VALID_BANNERS = set()
@@ -475,9 +492,15 @@ def fetch_outfit(message):
     )
 
 
-# تشغيل البوت باستمرار مع حذف الويب هوك القديم تلقائياً
+# تشغيل البوت باستمرار مع خادم الويب في الخلفية
 if __name__ == "__main__":
-  print("جاري حذف الويب هوك القديم وتشغيل البوت...")
+  print("جاري تشغيل خادم الويب وبوت التليجرام...")
+
+  # تشغيل خادم Flask في مسار خلفي (Thread) ليفتح البورت الذي تحتاجه منصة Render
+  t = threading.Thread(target=run_web)
+  t.daemon = True
+  t.start()
+
   bot.remove_webhook()
 
   # فحص الـ Check الذي طلبته سابقاً
@@ -490,6 +513,6 @@ if __name__ == "__main__":
   except Exception as e:
     print("Check failed:", e)
 
-  print("البوت قيد التشغيل الآن...")
+  print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-      
+        
