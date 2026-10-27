@@ -1,3 +1,2 @@
-aiogram
-fal-client
+pyTelegramBotAPI
 requests
