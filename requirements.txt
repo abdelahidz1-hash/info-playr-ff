@@ -1,3 +1,4 @@
+supabase
 pyTelegramBotAPI
 requests
-flask
+Flask
