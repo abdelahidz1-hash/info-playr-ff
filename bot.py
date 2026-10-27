@@ -167,7 +167,7 @@ def fetch_info(message):
           f"━━━━━━━━━━━━━━━━"
       )
 
-      # إرسال الفيديو أولاً فوق رسالة معلومات اللاعب
+      # إرسال الفيديو أولاً (بدون تعليق ليبقى ملتصقاً وبنفس التنسيق)
       video_url = (
           "https://res.cloudinary.com/kp7vx8ex/video/upload/VID_20261027_125607_181.mp4"
       )
@@ -276,7 +276,7 @@ def search_player(message):
 
   except requests.exceptions.RequestException as e:
     bot.reply_to(
-        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
+        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛＨᴇ sᴇʀᴠᴇʀ:\n{e}"
     )
 
 
@@ -486,7 +486,7 @@ def fetch_outfit(message):
         )
     else:
       bot.edit_message_text(
-          f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}",
+          f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏْدე: {r.status_code}",
           message.chat.id,
           wait_msg.message_id,
       )
