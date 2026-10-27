@@ -2,7 +2,6 @@ import os
 import threading
 import requests
 import telebot
-from telebot import types
 from flask import Flask
 
 # توكن البوت الخاص بك
@@ -72,7 +71,7 @@ def send_help(message):
   )
 
 
-# أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب مع أزرار تفاعلية
+# أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب
 @bot.message_handler(commands=["info"])
 def fetch_info(message):
   args = message.text.split()
@@ -123,37 +122,8 @@ def fetch_info(message):
       )
       region = get_val("region", "AccountRegion", "server", "accountRegion")
 
-      # جلب البانر والأفتار من الـ API الجديد
-      banner_url = None
-      avatar_url = None
-      try:
-        momin_r = requests.get(
-            f"https://momin-bot-info.vercel.app/{uid}", timeout=10
-        )
-        if momin_r.status_code == 200:
-          momin_data = momin_r.json()
-          if isinstance(momin_data, dict):
-            banner_url = (
-                momin_data.get("banner")
-                or momin_data.get("banner_url")
-                or momin_data.get("bannerUrl")
-            )
-            avatar_url = (
-                momin_data.get("avatar")
-                or momin_data.get("avatar_url")
-                or momin_data.get("avatarUrl")
-            )
-      except Exception:
-        pass
-
-      if not banner_url:
-        banner_id = get_val(
-            "bannerId", "banner_id", "banner", "cardId", "card_id", "badgeId"
-        )
-        if banner_id != "ɴ/ᴀ":
-          banner_url = f"https://freefiremobile-a.akamaihd.net/common/all-image/banner/{banner_id}.png"
-        else:
-          banner_url = "https://i.imgur.com/3Z6Y8uS.png"
+      # تعيين الصورة التي طلبتها كبانر أساسي لمعلومات اللاعب
+      banner_url = "https://i.ibb.co/N6RX7Nn1/IMG-20261027-213047.png"
 
       text = (
           f"👤 **ᴘʟᴀʏᴇʀ ɪɴғᴏʀᴍᴀᴛɪᴏɴ:**\n"
@@ -167,29 +137,16 @@ def fetch_info(message):
           f"━━━━━━━━━━━━━━━━"
       )
 
-      # إضافة أزرار تفاعلية احترافية باللغة الإنجليزية
-      markup = types.InlineKeyboardMarkup(row_width=2)
-      btn_refresh = types.InlineKeyboardButton(
-          "🔄 ʀᴇғʀᴇsʜ ɪɴғᴏ", callback_data=f"info_{uid}"
-      )
-      btn_copy = types.InlineKeyboardButton(
-          "📋 ᴄᴏᴘʏ ᴜɪᴅ", callback_data=f"copy_{uid}"
-      )
-      markup.add(btn_refresh, btn_copy)
-
       try:
         bot.send_photo(
             message.chat.id,
             banner_url,
             caption=text,
             parse_mode="Markdown",
-            reply_markup=markup,
             reply_to_message_id=message.message_id,
         )
       except Exception:
-        bot.reply_to(
-            message, text, parse_mode="Markdown", reply_markup=markup
-        )
+        bot.reply_to(message, text, parse_mode="Markdown")
 
     else:
       bot.reply_to(
@@ -199,20 +156,6 @@ def fetch_info(message):
   except requests.exceptions.RequestException as e:
     bot.reply_to(
         message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
-    )
-
-
-# معالجة ضغط الأزرار التفاعلية (Callback Query)
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-  if call.data.startswith("info_"):
-    uid = call.data.split("_")[1]
-    bot.answer_callback_query(call.id, f"🔄 Updating info for UID: {uid}")
-    # يمكن إرسال رسالة جديدة أو تنبيه بتحديث البيانات
-  elif call.data.startswith("copy_"):
-    uid = call.data.split("_")[1]
-    bot.answer_callback_query(
-        call.id, f"✅ UID copied: {uid}", show_alert=True
     )
 
 
@@ -523,12 +466,14 @@ def fetch_outfit(message):
 if __name__ == "__main__":
   print("جاري تشغيل خادم الويب وبوت التليجرام...")
 
+  # تشغيل خادم Flask في مسار خلفي (Thread) ليفتح البورت الذي تحتاجه منصة Render
   t = threading.Thread(target=run_web)
   t.daemon = True
   t.start()
 
   bot.remove_webhook()
 
+  # فحص الـ Check الذي طلبته سابقاً
   try:
     uid = 4485827054
     check_r = requests.get(
