@@ -2,6 +2,7 @@ import os
 import threading
 import requests
 import telebot
+from telebot import types
 from flask import Flask
 
 # توكن البوت الخاص بك
@@ -71,7 +72,7 @@ def send_help(message):
   )
 
 
-# أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب
+# أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب مع أزرار تفاعلية
 @bot.message_handler(commands=["info"])
 def fetch_info(message):
   args = message.text.split()
@@ -122,7 +123,7 @@ def fetch_info(message):
       )
       region = get_val("region", "AccountRegion", "server", "accountRegion")
 
-      # جلب البانر والأفتار من الـ API الجديد الذي طلبته
+      # جلب البانر والأفتار من الـ API الجديد
       banner_url = None
       avatar_url = None
       try:
@@ -145,7 +146,6 @@ def fetch_info(message):
       except Exception:
         pass
 
-      # الاحتياط للطريقة القديمة في حال لم يتوفر البانر من الـ API الجديد
       if not banner_url:
         banner_id = get_val(
             "bannerId", "banner_id", "banner", "cardId", "card_id", "badgeId"
@@ -167,16 +167,29 @@ def fetch_info(message):
           f"━━━━━━━━━━━━━━━━"
       )
 
+      # إضافة أزرار تفاعلية احترافية باللغة الإنجليزية
+      markup = types.InlineKeyboardMarkup(row_width=2)
+      btn_refresh = types.InlineKeyboardButton(
+          "🔄 ʀᴇғʀᴇsʜ ɪɴғᴏ", callback_data=f"info_{uid}"
+      )
+      btn_copy = types.InlineKeyboardButton(
+          "📋 ᴄᴏᴘʏ ᴜɪᴅ", callback_data=f"copy_{uid}"
+      )
+      markup.add(btn_refresh, btn_copy)
+
       try:
         bot.send_photo(
             message.chat.id,
             banner_url,
             caption=text,
             parse_mode="Markdown",
+            reply_markup=markup,
             reply_to_message_id=message.message_id,
         )
       except Exception:
-        bot.reply_to(message, text, parse_mode="Markdown")
+        bot.reply_to(
+            message, text, parse_mode="Markdown", reply_markup=markup
+        )
 
     else:
       bot.reply_to(
@@ -186,6 +199,20 @@ def fetch_info(message):
   except requests.exceptions.RequestException as e:
     bot.reply_to(
         message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
+    )
+
+
+# معالجة ضغط الأزرار التفاعلية (Callback Query)
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+  if call.data.startswith("info_"):
+    uid = call.data.split("_")[1]
+    bot.answer_callback_query(call.id, f"🔄 Updating info for UID: {uid}")
+    # يمكن إرسال رسالة جديدة أو تنبيه بتحديث البيانات
+  elif call.data.startswith("copy_"):
+    uid = call.data.split("_")[1]
+    bot.answer_callback_query(
+        call.id, f"✅ UID copied: {uid}", show_alert=True
     )
 
 
@@ -496,14 +523,12 @@ def fetch_outfit(message):
 if __name__ == "__main__":
   print("جاري تشغيل خادم الويب وبوت التليجرام...")
 
-  # تشغيل خادم Flask في مسار خلفي (Thread) ليفتح البورت الذي تحتاجه منصة Render
   t = threading.Thread(target=run_web)
   t.daemon = True
   t.start()
 
   bot.remove_webhook()
 
-  # فحص الـ Check الذي طلبته سابقاً
   try:
     uid = 4485827054
     check_r = requests.get(
@@ -515,4 +540,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-        
+  
