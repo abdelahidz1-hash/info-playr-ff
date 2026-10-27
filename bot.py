@@ -44,7 +44,7 @@ def send_welcome(message):
   bot.reply_to(
       message,
       "ᴡᴇʟᴄᴏᴍᴇ! ʏᴏᴜʀ ʙᴏᴛ ɪs wᴏʀᴋɪɴɢ sᴜᴄᴄᴇssꜰᴜʟʟʏ.\n\n"
-      "ᴛʏᴘᴇ /help ᴛᴏ sᴇᴇ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀɴᴅ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴛʜᴇᴍ.",
+      "ᴛʏᴘᴇ /help ᴛᴏ sᴇᴇ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀɴᴅ ʜᴏw ᴛᴏ ᴜsᴇ ᴛʜᴇᴍ.",
       parse_mode="Markdown",
   )
 
@@ -122,8 +122,38 @@ def fetch_info(message):
       )
       region = get_val("region", "AccountRegion", "server", "accountRegion")
 
-      # تعيين الصورة التي طلبتها كبانر أساسي لمعلومات اللاعب
-      banner_url = "https://i.ibb.co/N6RX7Nn1/IMG-20261027-213047.png"
+      # جلب البانر والأفتار من الـ API الجديد الذي طلبته
+      banner_url = None
+      avatar_url = None
+      try:
+        momin_r = requests.get(
+            f"https://momin-bot-info.vercel.app/{uid}", timeout=10
+        )
+        if momin_r.status_code == 200:
+          momin_data = momin_r.json()
+          if isinstance(momin_data, dict):
+            banner_url = (
+                momin_data.get("banner")
+                or momin_data.get("banner_url")
+                or momin_data.get("bannerUrl")
+            )
+            avatar_url = (
+                momin_data.get("avatar")
+                or momin_data.get("avatar_url")
+                or momin_data.get("avatarUrl")
+            )
+      except Exception:
+        pass
+
+      # الاحتياط للطريقة القديمة في حال لم يتوفر البانر من الـ API الجديد
+      if not banner_url:
+        banner_id = get_val(
+            "bannerId", "banner_id", "banner", "cardId", "card_id", "badgeId"
+        )
+        if banner_id != "ɴ/ᴀ":
+          banner_url = f"https://freefiremobile-a.akamaihd.net/common/all-image/banner/{banner_id}.png"
+        else:
+          banner_url = "https://i.imgur.com/3Z6Y8uS.png"
 
       text = (
           f"👤 **ᴘʟᴀʏᴇʀ ɪɴғᴏʀᴍᴀᴛɪᴏɴ:**\n"
@@ -136,6 +166,19 @@ def fetch_info(message):
           f"• **ʀᴇɢɪᴏɴ:** {region}\n"
           f"━━━━━━━━━━━━━━━━"
       )
+
+      # إرسال الفيديو أولاً فوق رسالة معلومات اللاعب
+      video_url = (
+          "https://res.cloudinary.com/kp7vx8ex/video/upload/VID_20261027_125607_181.mp4"
+      )
+      try:
+        bot.send_video(
+            message.chat.id,
+            video_url,
+            reply_to_message_id=message.message_id,
+        )
+      except Exception:
+        pass
 
       try:
         bot.send_photo(
@@ -485,4 +528,3 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-  
