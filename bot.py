@@ -502,4 +502,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-  
+          
