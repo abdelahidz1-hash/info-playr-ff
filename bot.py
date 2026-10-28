@@ -3,6 +3,7 @@ import threading
 import requests
 import telebot
 from flask import Flask
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 # توكن البوت الخاص بك
 TOKEN = "7989116766:AAHuvR5MYs8geGczCWCpAm22Vq8fLa4pnoc"
@@ -49,57 +50,78 @@ def send_welcome(message):
   )
 
 
-# أمر المساعدة /help (الأوامر السريعة)
+# أمر المساعدة /help مع الأزرار التفاعلية الجديدة
 @bot.message_handler(commands=["help"])
 def send_help(message):
+  markup = InlineKeyboardMarkup(row_width=1)
+  markup.add(
+      InlineKeyboardButton("INFO PLAYER", callback_data="btn_info"),
+      InlineKeyboardButton("RESEARCH NAME", callback_data="btn_search"),
+      InlineKeyboardButton("CLAN FF", callback_data="btn_clan"),
+      InlineKeyboardButton("LEVEL PLAYER", callback_data="btn_level"),
+      InlineKeyboardButton("SKIN FF", callback_data="btn_outfit"),
+      InlineKeyboardButton("BOT INFO FF", callback_data="btn_bot"),
+  )
+
   bot.reply_to(
       message,
-      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:**\n"
+      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs & ʙᴜᴛᴛᴏɴs:**\n"
       "━━━━━━━━━━━━━━━━\n"
-      "/info 7876206533\n"
-      "/search xMaSrY\n"
-      "/clan 30512345\n"
-      "/level 4485827054\n"
-      "/outfit 4485827054\n"
-      "/bot (شرح تفصيلي لاستخدام البوت)\n"
-      "━━━━━━━━━━━━━━━━",
+      "اختر أحد الأوامر أو الميزات أدناه عبر الأزرار التفاعلية:",
       parse_mode="Markdown",
+      reply_markup=markup,
   )
 
 
-# أمر شرح طريقة استخدام البوت بالتفصيل /bot
-@bot.message_handler(commands=["bot", "bothelp"])
-def explain_bot_usage(message):
-  explanation = (
-      "📖 **دليل استخدام بوت الألعاب والمعلومات:**\n\n"
-      "هذا البوت مخصص لجلب معلومات اللاعبين، والكلانات، ومستويات الحسابات والمزيد عبر إدخال الأوامر المخصصة تليها البيانات المطلوبة.\n\n"
-      "🔹 **طريقة الاستخدام لكل أمر:**\n\n"
-      "1️⃣ **معلومات اللاعب الأساسية (`/info`):**\n"
-      "• **الوظيفة:** لجلب الاسم، المستوى، النقاط، الإعجابات والمنطقة.\n"
-      "• **مثال:** `/info 7876206533`\n\n"
-      "2️⃣ **الـبحث عن لاعب (`/search` أو `/ser`):**\n"
-      "• **الوظيفة:** للبحث عن اللاعبين باستخدام الاسم وإظهار قائمة بالنتائج المطابقة مع أرقام الـ UID.\n"
-      "• **مثال:** `/search xMaSrY`\n\n"
-      "3️⃣ **معلومات المستوى (`/level`):**\n"
-      "• **الوظيفة:** لعرض مستوى وحساب اللاعب بدقة.\n"
-      "• **مثال:** `/level 4485827054`\n\n"
-      "4️⃣ **معلومات الكلأن (`/clan`):**\n"
-      "• **الوظيفة:** لعرض تفاصيل الكلأن (اسم القائد، الأعضاء، مستوى الكلأن).\n"
-      "• **مثال:** `/clan 30512345`\n\n"
-      "5️⃣ **ملابس ومظهر اللاعب (`/outfit`):**\n"
-      "• **الوظيفة:** لاستخراج صورة المظهر الخاص باللاعب وإرسالها كصورة.\n"
-      "• **مثال:** `/outfit 4485827054`\n\n"
-      "💡 *ملاحظة:* تأكد دائماً من كتابة مسافة صحيحة بين الأمر والرقم أو الاسم المطلوب."
-  )
-  bot.reply_to(
-      message,
-      explanation,
-      parse_mode="Markdown",
-      reply_to_message_id=message.message_id,
-  )
+# معالجة ضغط الأزرار التفاعلية (Inline Buttons)
+@bot.callback_query_handler(func=lambda call: True)
+def callback_handler(call):
+  if call.data == "btn_info":
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "ℹ️ لاستخدام أمر جلب معلومات اللاعب، يكتب هكذا:\n`/info 7876206533`",
+        parse_mode="Markdown",
+    )
+  elif call.data == "btn_search":
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "🔍 لاستخدام أمر البحث عن لاعب بالاسم، يكتب هكذا:\n`/search xMaSrY`",
+        parse_mode="Markdown",
+    )
+  elif call.data == "btn_clan":
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "🛡️ لاستخدام أمر معلومات الكلأن، يكتب هكذا:\n`/clan 30512345`",
+        parse_mode="Markdown",
+    )
+  elif call.data == "btn_level":
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "📊 لاستخدام أمر معلومات المستوى، يكتب هكذا:\n`/level 4485827054`",
+        parse_mode="Markdown",
+    )
+  elif call.data == "btn_outfit":
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "👕 لاستخدام أمر مظهر/ملابس اللاعب، يكتب هكذا:\n`/outfit 4485827054`",
+        parse_mode="Markdown",
+    )
+  elif call.data == "btn_bot":
+    bot.answer_callback_query(call.id)
+    bot.send_message(
+        call.message.chat.id,
+        "🤖 **BOT INFO FF:**\nهذا البوت مخصص لجلب معلومات ولعبة فري فاير بكفاءة"
+        " عالية ومتصل بخادم خارجي سريريع.",
+        parse_mode="Markdown",
+    )
 
 
-# أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب
+# أمر لجلب البيانات من الـ API عبر إدخال الآي دي الخاص باللاعب (INFO PLAYER)
 @bot.message_handler(commands=["info"])
 def fetch_info(message):
   args = message.text.split()
@@ -150,7 +172,6 @@ def fetch_info(message):
       )
       region = get_val("region", "AccountRegion", "server", "accountRegion")
 
-      # استخدام رابط الصورة الثابت الذي طلبته فوق معلومات اللاعب
       banner_url = "https://i.ibb.co/MyNThqFz/1793135688578.jpg"
 
       text = (
@@ -187,7 +208,7 @@ def fetch_info(message):
     )
 
 
-# أمر للبحث عن اللاعبين باستخدام اسم اللاعب (/search أو /ser)
+# أمر للبحث عن اللاعبين باستخدام اسم اللاعب (RESEARCH NAME)
 @bot.message_handler(commands=["search", "ser"])
 def search_player(message):
   args = message.text.split(maxsplit=1)
@@ -261,11 +282,11 @@ def search_player(message):
 
   except requests.exceptions.RequestException as e:
     bot.reply_to(
-        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
+        message, f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟེ་ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}"
     )
 
 
-# أمر لجلب بيانات المستوى (Level) عبر إدخال الآي دي الخاص باللاعب
+# أمر لجلب بيانات المستوى (LEVEL PLAYER)
 @bot.message_handler(commands=["level"])
 def fetch_level(message):
   args = message.text.split()
@@ -312,7 +333,7 @@ def fetch_level(message):
       uid_val = get_val("uid", "accountId", "account_id") or uid
 
       text = (
-          f"📊 **ᴘʟᴀʏᴇʀ ʟᴇᴠᴇʟ ɪɴғᴏʀᴍᴀᴛɪᴏN:**\n"
+          f"📊 **ᴘʟᴀʏᴇʀ ʟᴇᴠᴇʟ ɪɴғᴏʀᴍᴀᴛɪᴏɴ:**\n"
           f"━━━━━━━━━━━━━━━━\n"
           f"• **ɴᴀᴍᴇ:** {name}\n"
           f"• **ᴜɪᴅ:** `{uid_val}`\n"
@@ -338,7 +359,7 @@ def fetch_level(message):
     )
 
 
-# أمر لجلب بيانات الكلأن (Guild/Clan) عبر إدخال معرف الكلأن
+# أمر لجلب بيانات الكلأن (CLAN FF)
 @bot.message_handler(commands=["clan"])
 def fetch_clan(message):
   args = message.text.split()
@@ -426,7 +447,7 @@ def fetch_clan(message):
     )
 
 
-# أمر لجلب مظهر / ملابس اللاعب (Outfit)
+# أمر لجلب مظهر / ملابس اللاعب (SKIN FF)
 @bot.message_handler(commands=["outfit"])
 def fetch_outfit(message):
   args = message.text.split()
@@ -513,4 +534,3 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-    
