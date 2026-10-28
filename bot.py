@@ -5,7 +5,7 @@ import telebot
 from flask import Flask
 
 # توكن البوت الخاص بك
-TOKEN = "7989116766:AAHuvR5MYs8geGczCWCpAm22Vq8fLa4pnoc"
+TOKEN = "7941526631:AAHRBSfpHUFLdw8GvlevvawKtL-16ciMCrs"
 bot = telebot.TeleBot(TOKEN)
 
 # إعداد خادم Flask وهمي لإرضاء Render Web Service المجاني وتجنب مهلة البورتات
