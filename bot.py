@@ -1,4 +1,4 @@
-Import os
+import os
 import threading
 import requests
 import telebot
@@ -10,6 +10,7 @@ bot = telebot.TeleBot(TOKEN)
 
 # إعداد خادم Flask وهمي لإرضاء Render Web Service المجاني وتجنب مهلة البورتات
 app = Flask(__name__)
+
 
 @app.route("/")
 def home():
