@@ -49,23 +49,18 @@ def send_welcome(message):
   )
 
 
-# أمر المساعدة /help
+# أمر المساعدة /help (تم تحديث الشكل هنا فقط)
 @bot.message_handler(commands=["help"])
 def send_help(message):
   bot.reply_to(
       message,
-      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴْدs:**\n"
+      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:**\n"
       "━━━━━━━━━━━━━━━━\n"
-      "• **ᴘʟᴀʏᴇʀ ɪɴғᴏ:** `/info <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/info 7876206533`\n\n"
-      "• **sᴇᴀʀᴄʜ by ɴᴀᴍᴇ:** `/search <Name>` أو `/ser <Name>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/search xMaSrY`\n\n"
-      "• **ᴄʟᴀɴ ɪɴғᴏ:** `/clan <Clan ID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/clan 30512345`\n\n"
-      "• **ʟᴇᴠᴇʟ ɪɴғᴏ:** `/level <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/level 4485827054`\n\n"
-      "• **ᴏᴜᴛғɪᴛ ɪɴғᴏ:** `/outfit <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/outfit 4485827054`\n"
+      "/info 7876206533\n"
+      "/search xMaSrY\n"
+      "/clan 30512345\n"
+      "/level 4485827054\n"
+      "/outfit 4485827054\n"
       "━━━━━━━━━━━━━━━━",
       parse_mode="Markdown",
   )
@@ -485,4 +480,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-  
+                            
