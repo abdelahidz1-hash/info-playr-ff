@@ -16,11 +16,11 @@ import jwt
 import requests
 import telebot
 import urllib3
-from xCore import *  # استيراد الوظائف الخاصة بالسبام (xCore)
+from xCore import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# --- إعدادات التوكنات والبوتات ---
+# --- توكن بوت التيليجرام الخاص بك ---
 TOKEN = "9217763166:AAEJW2mxUf6aByZoX9TQ1zIG2n5nhyuDheA"
 bot = telebot.TeleBot(TOKEN)
 
@@ -38,7 +38,7 @@ def run_web():
   app.run(host="0.0.0.0", port=port)
 
 
-# --- متغيرات وإعدادات السبام (Spam Configuration) ---
+# --- متغيرات وإعدادات السبام والحسابات ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ACCOUNTS_FILE = os.path.join(BASE_DIR, "accounts.json")
 
@@ -549,7 +549,7 @@ def start_spam_timer():
   spam_timer.start()
 
 
-# --- دالة لتأمين رموز الماركدون لمنع أخطاء التليجرام ---
+# --- دالة تأمين رموز الماركدون ---
 def escape_md(val):
   if val is None or val == "ɴ/ᴀ":
     return "ɴ/ᴀ"
@@ -561,15 +561,20 @@ def escape_md(val):
   )
 
 
-# --- أوامر البوت (أوامر المعلومات + أوامر السبام) ---
+# --- أوامر البوت (المعلومات والسبام) ---
 
 
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
   bot.reply_to(
       message,
-      "ᴡᴇʟᴄᴏᴍᴇ! ʏᴏᴜʀ ʙᴏᴛ ɪs wᴏʀᴋɪɴɢ sᴜᴄᴄᴇssꜰᴜʟʟʏ.\n\n"
-      "ᴛʏᴘᴇ /help ᴛᴏ sᴇᴇ ᴛʜᴇ ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs ᴀɴᴅ ʜᴏw ᴛᴏ ᴜsᴇ ᴛʜᴇᴍ.",
+      "🤖 **SYX-BARO & INFO BOT**\n\n"
+      "• `/info <UID>` - جلب معلومات اللاعب\n"
+      "• `/search <Name>` - البحث عن اللاعب بالاسم\n"
+      "• `/clan <Clan ID>` - معلومات الكلأن\n"
+      "• `/spam <UID>` - تشغيل سبام رومات\n"
+      "• `/stop` - إيقاف السبام\n"
+      "• `/status` - حالة الحسابات المتصلة",
       parse_mode="Markdown",
   )
 
@@ -578,7 +583,7 @@ def send_welcome(message):
 def send_help(message):
   bot.reply_to(
       message,
-      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴْدs:**\n"
+      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴᴅs:**\n"
       "━━━━━━━━━━━━━━━━\n"
       "• **ᴘʟᴀʏᴇʀ ɪɴғᴏ:** `/info <UID>`\n"
       "• **sᴇᴀʀᴄʜ by ɴᴀᴍᴇ:** `/search <Name>` أو `/ser <Name>`\n"
@@ -696,7 +701,4 @@ def fetch_info(message):
     return
 
   try:
-    r = requests.get(f"http://de26.spaceify.eu:26080/info?uid={uid}", timeout=20)
-
-    if r.status_code == 200:
-      d
+    r = requests.ge
