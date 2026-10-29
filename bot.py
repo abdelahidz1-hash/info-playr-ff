@@ -5,7 +5,7 @@ import telebot
 from flask import Flask
 
 # توكن البوت الخاص بك
-TOKEN = "7941526631:AAHRBSfpHUFLdw8GvlevvawKtL-16ciMCrs"
+TOKEN = "9217763166:AAEJW2mxUf6aByZoX9TQ1zIG2n5nhyuDheA"
 bot = telebot.TeleBot(TOKEN)
 
 # إعداد خادم Flask وهمي لإرضاء Render Web Service المجاني وتجنب مهلة البورتات
@@ -65,9 +65,7 @@ def send_help(message):
       "• **ʟᴇᴠᴇʟ ɪɴғᴏ:** `/level <UID>`\n"
       "  *ᴇxᴀᴍᴘʟᴇ:* `/level 4485827054`\n\n"
       "• **ᴏᴜᴛғɪᴛ ɪɴғᴏ:** `/outfit <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/outfit 4485827054`\n\n"
-      "• **ᴀᴅᴅ ʟɪᴋᴇs:** `/like <UID>`\n"
-      "  *ᴇxᴀᴍᴘʟᴇ:* `/like 4485827054`\n"
+      "  *ᴇxᴀᴍᴘʟᴇ:* `/outfit 4485827054`\n"
       "━━━━━━━━━━━━━━━━",
       parse_mode="Markdown",
   )
@@ -464,68 +462,6 @@ def fetch_outfit(message):
     )
 
 
-# أمر لزيادة لايكات فري فاير (/like)
-@bot.message_handler(commands=["like"])
-def add_likes(message):
-  args = message.text.split()
-  if len(args) > 1:
-    uid = args[1]
-  else:
-    bot.reply_to(
-        message,
-        "⚠️ ᴘʟᴇᴀsᴇ wʀɪᴛᴇ ᴛʜᴇ ᴜɪᴅ ᴄᴏʀʀᴇᴄᴛʟʏ ɴᴇxᴛ ᴛᴏ ᴛʜᴇ ᴄᴏᴍᴍᴀɴᴅ.\nᴇxᴀᴍᴘʟᴇ:\n`/like 4485827054`",
-        parse_mode="Markdown",
-    )
-    return
-
-  region = args[2] if len(args) > 2 else "ME"
-  key = args[3] if len(args) > 3 else "free"
-
-  wait_msg = bot.reply_to(
-      message, "⏳ جاري ارسال اللايكات، يرجى الانتظار...", parse_mode="Markdown"
-  )
-
-  try:
-    url = f"https://my-api-plum-two.vercel.app/like?uid={uid}&region={region}&key={key}"
-    r = requests.get(url, timeout=30)
-
-    if r.status_code == 200:
-      try:
-        res_data = r.json()
-        bot.edit_message_text(
-            f"✅ **تم ارسال اللايكات بنجاح!**\n━━━━━━━━━━━━━━━━\n• **UID:** `{uid}`\n• **الاستجابة:** `{res_data}`\n━━━━━━━━━━━━━━━━",
-            message.chat.id,
-            wait_msg.message_id,
-            parse_mode="Markdown"
-        )
-      except Exception:
-        bot.edit_message_text(
-            f"✅ **تم ارسال اللايكات بنجاح!**\n━━━━━━━━━━━━━━━━\n• **UID:** `{uid}`\n━━━━━━━━━━━━━━━━",
-            message.chat.id,
-            wait_msg.message_id,
-            parse_mode="Markdown"
-        )
-    else:
-      bot.edit_message_text(
-          f"sᴏʀʀʏ, ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wɪᴛʜ sᴛᴀᴛᴜs ᴄᴏᴅᴇ: {r.status_code}",
-          message.chat.id,
-          wait_msg.message_id,
-      )
-
-  except requests.exceptions.Timeout:
-    bot.edit_message_text(
-        "⏱️ انتهت مهلة الانتظار، يرجى المحاولة لاحقاً.",
-        message.chat.id,
-        wait_msg.message_id,
-    )
-  except requests.exceptions.RequestException as e:
-    bot.edit_message_text(
-        f"ᴀɴ ᴇʀʀᴏʀ ᴏᴄᴄᴜʀʀᴇᴅ wʜɪʟᴇ ᴄᴏɴɴᴇᴄᴛɪɴɢ ᴛᴏ ᴛʜᴇ sᴇʀᴠᴇʀ:\n{e}",
-        message.chat.id,
-        wait_msg.message_id,
-    )
-
-
 # تشغيل البوت باستمرار مع خادم الويب في الخلفية
 if __name__ == "__main__":
   print("جاري تشغيل خادم الويب وبوت التليجرام...")
@@ -549,3 +485,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
+  
