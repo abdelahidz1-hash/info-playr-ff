@@ -413,7 +413,7 @@ def fetch_outfit(message):
     return
 
   wait_msg = bot.reply_to(
-      message, "⏳ جاري جلب صورة المظهر، يرجى الانتظار...", parse_mode="Markdown"
+      message, "⏳ ɪᴍᴀɢᴇ ʟᴏᴀᴅɪɴɢ...", parse_mode="Markdown"
   )
 
   try:
@@ -450,7 +450,7 @@ def fetch_outfit(message):
 
   except requests.exceptions.Timeout:
     bot.edit_message_text(
-        "⏱️ انتهت مهلة الانتظار، الخادم المجاني بطيء جداً حالياً ولم يستجب في الوقت المحدد. يرجى المحاولة لاحقاً.",
+        "⏱️ ᴛɪᴍᴇᴏᴜᴛ, ᴘʟᴇᴀsᴇ ᴛʀʏ ᴀɢᴀɪɴ ʟᴀᴛᴇʀ.",
         message.chat.id,
         wait_msg.message_id,
     )
@@ -485,4 +485,4 @@ if __name__ == "__main__":
 
   print("البوت قيد التشغيل الآن مع خادم الويب...")
   bot.infinity_polling()
-  
+    
