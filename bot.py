@@ -38,7 +38,7 @@ def send_welcome(message):
 def send_help(message):
   bot.reply_to(
       message,
-      "🤖 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴْدs:**\n"
+      "📱 **ᴀᴠᴀɪʟᴀʙʟᴇ ᴄᴏᴍᴍᴀɴْدs:**\n"
       "━━━━━━━━━━━━━━━━\n"
       "• **ᴘʟᴀʏᴇʀ ɪɴғᴏ:** `/info <UID>`\n"
       "  *ᴇxᴀᴍᴘʟᴇ:* `/info 7876206533`\n\n"
@@ -421,7 +421,7 @@ def fetch_outfit(message):
         bot.delete_message(message.chat.id, wait_msg.message_id)
       except Exception:
         bot.edit_message_text(
-            "✅ ᴛʜᴇ ᴏᴜᴛғɪᴛ ɪᴍᴀɢᴇ wᴀs sᴀᴠᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.",
+            "✓ ᴛʜᴇ ᴏᴜᴛғɪᴛ ɪᴍᴀɢᴇ wᴀs sᴀᴠᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.",
             message.chat.id,
             wait_msg.message_id,
         )
